@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pour Doua</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500;1,600&family=Poppins:wght@300;400;500;600&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#240509;
+    --bg-panel:#34090f;
+    --bg-panel-2:#3d0b12;
+    --red:#c81d3f;
+    --red-glow:#e63950;
+    --gold:#c9a24b;
+    --cream:#f7e9df;
+    --blush:#f2c6ce;
+    --muted:#caa1a8;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 20% -10%, rgba(200,29,63,0.25), transparent 55%),
+      radial-gradient(ellipse at 80% 110%, rgba(201,162,75,0.12), transparent 50%),
+      var(--bg-deep);
+    color:var(--cream);
+    font-family:'Poppins', sans-serif;
+    overflow-x:hidden;
+    position:relative;
+  }
+  /* ambient floating petals */
+  .petal{
+    position:fixed; top:-5%; font-size:16px; opacity:0.55;
+    pointer-events:none; animation:fall linear infinite; z-index:0;
+    filter:drop-shadow(0 0 6px rgba(230,57,80,0.4));
+  }
+  @keyframes fall{
+    0%{ transform:translateY(0) rotate(0deg); opacity:0; }
+    10%{ opacity:0.6; }
+    100%{ transform:translateY(110vh) rotate(200deg); opacity:0; }
+  }
+  .stage{
+    position:relative; z-index:1;
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    padding:32px 20px;
+  }
+  .panel{
+    width:100%; max-width:520px;
+    text-align:center;
+    display:none;
+    animation:riseIn 0.7s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  .panel.active{display:block;}
+  @keyframes riseIn{
+    from{opacity:0; transform:translateY(24px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .eyebrow{
+    font-family:'Space Mono', monospace;
+    letter-spacing:0.35em;
+    text-transform:uppercase;
+    font-size:11px;
+    color:var(--gold);
+    margin-bottom:18px;
+  }
+  h1{
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-weight:600;
+    font-size:clamp(2.4rem, 7vw, 3.6rem);
+    margin:0 0 10px;
+    line-height:1.05;
+    color:var(--cream);
+  }
+  .sub{
+    font-size:15px;
+    color:var(--muted);
+    font-weight:300;
+    margin-bottom:38px;
+    line-height:1.6;
+  }
+  .question{
+    font-family:'Cormorant Garamond', serif;
+    font-size:clamp(1.5rem, 4.5vw, 2rem);
+    font-weight:500;
+    margin-bottom:10px;
+    color:var(--blush);
+  }
+  .hint-no{
+    font-size:11.5px;
+    font-style:italic;
+    color:var(--muted);
+    margin-bottom:36px;
+  }
+
+  /* --- Enveloppe (page d'accueil) --- */
+  .envelope-scene{
+    cursor:pointer;
+    display:inline-block;
+    margin-bottom:22px;
+    perspective:800px;
+  }
+  .envelope{ position:relative; width:220px; height:150px; margin:0 auto; }
+  .envelope-body{
+    position:absolute; inset:0;
+    background:linear-gradient(160deg, var(--bg-panel-2), var(--bg-panel));
+    border:1px solid rgba(201,162,75,0.4);
+    border-radius:10px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.45);
+    z-index:1;
+  }
+  .envelope-body::before{
+    content:'';
+    position:absolute; left:0; right:0; bottom:0; top:40%;
+    background:
+      linear-gradient(135deg, transparent 49.5%, rgba(0,0,0,0.25) 50%),
+      linear-gradient(-135deg, transparent 49.5%, rgba(0,0,0,0.25) 50%);
+  }
+  .envelope-flap{
+    position:absolute; top:0; left:0; width:0; height:0;
+    border-left:110px solid transparent;
+    border-right:110px solid transparent;
+    border-top:90px solid var(--bg-panel-2);
+    transform-origin:top;
+    transition:transform 0.65s cubic-bezier(.2,.8,.2,1);
+    z-index:2;
+    filter:brightness(1.08);
+  }
+  .envelope-seal{
+    position:absolute; top:66px; left:50%; transform:translate(-50%,-50%);
+    width:36px; height:36px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--red-glow), var(--red));
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; color:var(--cream);
+    box-shadow:0 4px 12px rgba(0,0,0,0.4);
+    z-index:3; transition:opacity 0.3s ease;
+  }
+  .envelope-scene.open .envelope-flap{ transform:rotateX(-180deg); }
+  .envelope-scene.open .envelope-seal{ opacity:0; }
+  .envelope-hint{
+    font-size:12px; letter-spacing:0.05em; color:var(--muted);
+    animation:pulseHint 1.8s ease-in-out infinite;
+  }
+  @keyframes pulseHint{ 0%,100%{opacity:0.45;} 50%{opacity:1;} }
+
+  /* --- Mot pour Lyes --- */
+  .note-field{ text-align:left; margin:0 auto 26px; max-width:420px; }
+  .note-field label{
+    display:block; font-size:11px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--gold); margin-bottom:8px;
+  }
+  .note-field textarea{
+    width:100%; background:rgba(255,255,255,0.03);
+    border:1px solid rgba(201,162,75,0.3); border-radius:12px;
+    padding:12px 14px; color:var(--cream);
+    font-family:'Poppins', sans-serif; font-size:14px;
+    resize:vertical; min-height:70px;
+  }
+  .note-field textarea::placeholder{ color:var(--muted); }
+  .note-field textarea:focus{ outline:none; border-color:var(--gold); }
+  .btn-row{
+    position:relative;
+    display:flex; gap:18px; justify-content:center; align-items:center;
+    min-height:70px;
+  }
+  button{
+    font-family:'Poppins', sans-serif;
+    border:none; cursor:pointer;
+    border-radius:999px;
+    padding:14px 34px;
+    font-size:15px; font-weight:500;
+    transition:transform 0.15s ease, box-shadow 0.2s ease;
+  }
+  #btn-yes{
+    background:linear-gradient(135deg, var(--red), var(--red-glow));
+    color:var(--cream);
+    box-shadow:0 8px 30px rgba(230,57,80,0.35);
+  }
+  #btn-yes:hover{ transform:translateY(-2px) scale(1.03); }
+  #btn-no{
+    background:transparent;
+    color:var(--muted);
+    border:1px solid rgba(202,161,168,0.4);
+    position:relative;
+  }
+
+  /* --- Ticket (signature element) --- */
+  .ticket-wrap{ margin:0 auto 34px; max-width:420px; }
+  .ticket{
+    position:relative;
+    background:linear-gradient(160deg, var(--bg-panel-2), var(--bg-panel));
+    border:1px solid rgba(201,162,75,0.35);
+    border-radius:18px;
+    padding:28px 26px 20px;
+    text-align:left;
+    box-shadow:0 30px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .ticket-top{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    margin-bottom:18px;
+  }
+  .ticket-label{
+    font-family:'Space Mono', monospace;
+    font-size:10px; letter-spacing:0.2em; color:var(--gold); text-transform:uppercase;
+  }
+  .ticket-film{
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:1.7rem;
+    color:var(--cream);
+    line-height:1.15;
+    margin:6px 0 2px;
+  }
+  .ticket-venue{ font-size:12.5px; color:var(--muted); }
+  .ticket-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:14px;
+    margin:18px 0 14px;
+  }
+  .ticket-field .k{ font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); margin-bottom:4px;}
+  .ticket-field .v{ font-family:'Space Mono', monospace; font-size:14px; color:var(--cream); }
+  .perforation{
+    position:relative;
+    height:1px;
+    margin:18px -26px;
+    background:repeating-linear-gradient(90deg, rgba(201,162,75,0.5) 0 8px, transparent 8px 16px);
+  }
+  .perforation::before, .perforation::after{
+    content:''; position:absolute; top:-9px; width:18px; height:18px;
+    background:var(--bg-deep); border-radius:50%;
+  }
+  .perforation::before{ left:-9px; }
+  .perforation::after{ right:-9px; }
+  .ticket-quote{
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:15px;
+    color:var(--blush);
+    text-align:center;
+    padding-top:4px;
+  }
+  .barcode{
+    margin-top:16px; height:34px; border-radius:4px;
+    background:repeating-linear-gradient(90deg, var(--cream) 0 2px, transparent 2px 5px, var(--cream) 5px 6px, transparent 6px 11px);
+    opacity:0.65;
+  }
+
+  /* hearts burst */
+  .heart{ position:fixed; font-size:20px; pointer-events:none; z-index:5; }
+
+  .final-msg{
+    font-family:'Cormorant Garamond', serif;
+    font-size:clamp(1.3rem, 4vw, 1.6rem);
+    color:var(--blush);
+    line-height:1.5;
+    margin:18px 0 30px;
+  }
+  .signed{ font-size:13px; color:var(--muted); margin-top:-16px; margin-bottom:30px; letter-spacing:0.05em; }
+
+  .ghost-btn{
+    background:transparent; color:var(--gold); border:1px solid rgba(201,162,75,0.5);
+    margin-top:6px;
+  }
+  .ghost-btn:hover{ background:rgba(201,162,75,0.08); }
+
+  .music-toggle{
+    position:fixed; bottom:20px; right:20px; z-index:6;
+    width:46px; height:46px; border-radius:50%;
+    background:rgba(52,9,15,0.85); border:1px solid rgba(201,162,75,0.4);
+    color:var(--gold); font-size:18px; display:flex; align-items:center; justify-content:center;
+    padding:0;
+  }
+  .caption{ font-size:10px; color:var(--muted); position:fixed; bottom:8px; right:20px; z-index:6; letter-spacing:0.05em;}
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <!-- STEP 0 : L'ENVELOPPE -->
+  <section class="panel active" id="step-envelope">
+    <div class="eyebrow">Pour Doua</div>
+    <div class="envelope-scene" id="envelope-scene" onclick="openEnvelope()">
+      <div class="envelope">
+        <div class="envelope-body"></div>
+        <div class="envelope-seal">❤</div>
+        <div class="envelope-flap"></div>
+      </div>
+    </div>
+    <p class="envelope-hint">Appuie pour ouvrir</p>
+  </section>
+
+  <!-- STEP 1 : LA QUESTION -->
+  <section class="panel" id="step-ask">
+    <div class="eyebrow">Pour Doua</div>
+    <h1>Salut Doua…</h1>
+    <p class="sub">J'ai une petite question à te poser.</p>
+    <p class="question">Ça te dit un date avec moi ?</p>
+    <p class="hint-no">(Dire NON ne sert à rien, mais tu peux essayer)</p>
+    <div class="btn-row" id="btn-row">
+      <button id="btn-yes" onclick="goTo('step-reveal')">Oui</button>
+      <button id="btn-no">Non</button>
+    </div>
+  </section>
+
+  <!-- STEP 2 : LE TICKET -->
+  <section class="panel" id="step-reveal">
+    <div class="eyebrow">Doua &amp; Lyes</div>
+    <h1>Tu as dit oui…</h1>
+    <p class="sub">Ça me fait vraiment plaisir. Voici ce que je te propose :</p>
+
+    <div class="ticket-wrap">
+      <div class="ticket">
+        <div class="ticket-top">
+          <div>
+            <div class="ticket-label">Séance privée</div>
+            <div class="ticket-film">Spider-Man:<br>Brand New Day</div>
+            <div class="ticket-venue">Pathé La Joliette — VIP Velvet</div>
+          </div>
+        </div>
+        <div class="ticket-grid">
+          <div class="ticket-field"><div class="k">Date</div><div class="v">Mer. 29 Juil 2026</div></div>
+          <div class="ticket-field"><div class="k">Heure</div><div class="v">21:30</div></div>
+        </div>
+        <div class="perforation"></div>
+        <div class="ticket-quote">"Places en VIP, c'est fini les places PMR" 😏</div>
+        <div class="barcode"></div>
+      </div>
+    </div>
+
+    <div class="note-field">
+      <label for="note-lyes">Un mot pour Lyes (facultatif)</label>
+      <textarea id="note-lyes" rows="3" placeholder="Écris-lui un petit mot..."></textarea>
+    </div>
+
+    <button id="btn-valider" onclick="validate()">Je valide, j'ai hâte d'y être</button>
+  </section>
+
+  <!-- STEP 3 : CONFIRMATION -->
+  <section class="panel" id="step-final">
+    <div class="eyebrow">C'est noté</div>
+    <h1>C'est officiel !</h1>
+    <p class="final-msg">Notre rendez-vous :<br>
+      <strong>Mercredi 29 juillet 2026, 21h30</strong><br>
+      Pathé La Joliette · VIP Velvet 🕷️
+    </p>
+    <div class="signed">— Lyes</div>
+    <div class="ticket-quote" id="final-note" style="display:none; max-width:420px; margin:0 auto 24px;"></div>
+    <button class="ghost-btn" onclick="addToCalendar()">Ajouter à mon calendrier</button>
+  </section>
+
+</div>
+
+<button class="music-toggle" id="music-btn" title="Jul feat. Houari – Femme">🎵</button>
+<div class="caption">Jul ft. Houari – Femme</div>
+<audio id="bg-audio" loop></audio>
+
+<script>
+function goTo(id){
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  el.style.animation = 'none'; el.offsetHeight; el.style.animation = null;
+}
+
+function openEnvelope(){
+  const scene = document.getElementById('envelope-scene');
+  if(scene.classList.contains('open')) return;
+  scene.classList.add('open');
+  setTimeout(() => goTo('step-ask'), 650);
+}
+
+function validate(){
+  const note = document.getElementById('note-lyes').value.trim();
+  const noteEl = document.getElementById('final-note');
+  if(note){
+    noteEl.textContent = '"' + note + '"';
+    noteEl.style.display = 'block';
+  }
+  goTo('step-final');
+  burstHearts();
+}
+
+/* ---- Bouton NON : fuit + rétrécit + change de place ---- */
+const btnNo = document.getElementById('btn-no');
+const row = document.getElementById('btn-row');
+let scale = 1;
+let dodges = 0;
+const teases = ["Non", "Sûre ?", "Vraiment ?", "Réfléchis bien...", "Allez...", "Doua svp"];
+
+function dodge(){
+  const rowRect = row.getBoundingClientRect();
+  const btnRect = btnNo.getBoundingClientRect();
+  const maxX = Math.max(0, rowRect.width - btnRect.width);
+  const maxY = Math.max(0, 120 - btnRect.height);
+  const x = Math.random() * maxX - maxX/2;
+  const y = Math.random() * maxY - maxY/2;
+  btnNo.style.position = 'relative';
+  btnNo.style.left = x + 'px';
+  btnNo.style.top = y + 'px';
+}
+
+function shrinkAndTease(){
+  dodges++;
+  scale = Math.max(0.35, scale - 0.12);
+  btnNo.style.transform = `scale(${scale})`;
+  btnNo.textContent = teases[Math.min(dodges, teases.length - 1)];
+}
+
+btnNo.addEventListener('mouseenter', () => { dodge(); shrinkAndTease(); });
+btnNo.addEventListener('click', (e) => {
+  e.preventDefault();
+  dodge();
+  shrinkAndTease();
+});
+btnNo.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  dodge();
+  shrinkAndTease();
+});
+
+/* ---- Coeurs qui tombent en ambiance ---- */
+function spawnPetal(){
+  const p = document.createElement('div');
+  p.className = 'petal';
+  p.textContent = Math.random() > 0.5 ? '♥' : '❦';
+  p.style.left = Math.random()*100 + 'vw';
+  p.style.animationDuration = (8 + Math.random()*10) + 's';
+  p.style.fontSize = (12 + Math.random()*14) + 'px';
+  document.body.appendChild(p);
+  setTimeout(() => p.remove(), 20000);
+}
+setInterval(spawnPetal, 900);
+
+/* ---- Explosion de coeurs à la validation ---- */
+function burstHearts(){
+  for(let i=0; i<40; i++){
+    setTimeout(() => {
+      const h = document.createElement('div');
+      h.className = 'heart';
+      h.textContent = ['❤️','💕','💗','🕷️'][Math.floor(Math.random()*4)];
+      h.style.left = (45 + Math.random()*10) + 'vw';
+      h.style.top = '55vh';
+      h.style.fontSize = (14 + Math.random()*18) + 'px';
+      h.style.transition = 'all 1.4s cubic-bezier(.2,.8,.2,1)';
+      document.body.appendChild(h);
+      requestAnimationFrame(() => {
+        h.style.left = (Math.random()*100) + 'vw';
+        h.style.top = (Math.random()*100) + 'vh';
+        h.style.opacity = '0';
+        h.style.transform = `rotate(${Math.random()*360}deg)`;
+      });
+      setTimeout(() => h.remove(), 1500);
+    }, i * 30);
+  }
+}
+
+/* ---- Ajout au calendrier (.ics) ---- */
+function addToCalendar(){
+  const ics = [
+    'BEGIN:VCALENDAR','VERSION:2.0','BEGIN:VEVENT',
+    'SUMMARY:Date avec Lyes — Spider-Man: Brand New Day (VIP)',
+    'LOCATION:Pathé La Joliette, VIP Velvet',
+    'DESCRIPTION:Date avec Lyes. Places en VIP, c\\\'est fini les places PMR.',
+    'DTSTART:20260729T213000',
+    'DTEND:20260729T233000',
+    'END:VEVENT','END:VCALENDAR'
+  ].join('\r\n');
+  const blob = new Blob([ics], {type:'text/calendar'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'date-doua-lyes.ics';
+  a.click();
+}
+
+/* ---- Musique de fond (à brancher toi-même, voir note) ---- */
+const musicBtn = document.getElementById('music-btn');
+const audio = document.getElementById('bg-audio');
+let playing = false;
+musicBtn.addEventListener('click', () => {
+  if(!audio.src){
+    alert("Ajoute le fichier audio (mp3 acheté/possédé légalement) et remplace la ligne audio.src dans le code pour activer la musique.");
+    return;
+  }
+  if(playing){ audio.pause(); } else { audio.play(); }
+  playing = !playing;
+});
+// audio.src = "chemin-vers-ton-fichier.mp3"; // <- à compléter toi-même
+</script>
+
+</body>
+</html>
